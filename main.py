@@ -1,47 +1,3 @@
-Hugging Face's logo
-Hugging Face
-Models
-Datasets
-Spaces
-Posts
-Docs
-Enterprise
-Pricing
-
-
-
-Spaces:
-
-CabirPoya
-/
-poyaadmin
-
-
-like
-0
-App
-Files
-Community
-Settings
-poyaadmin
-/
-main.py
-
-CabirPoya's picture
-CabirPoya
-Update main.py
-b968fbe
-verified
-2 minutes ago
-raw
-
-Copy download link
-history
-blame
-edit
-delete
-
-2.8 kB
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -112,4 +68,3 @@ def register(form: RegisterForm, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="خطا در ثبت اطلاعات")
 
     return {"message": "کاربر با موفقیت ثبت شد", "username": new_user.username}
-
