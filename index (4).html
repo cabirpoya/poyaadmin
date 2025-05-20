@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                z-index: 50;
+                height: 100vh;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Login Page (Default View) -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center gradient-bg p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">Welcome Back</h1>
+                <p class="text-gray-600 mt-2">Sign in to access your account</p>
+            </div>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="username" name="username" 
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" 
+                           placeholder="Enter your username" required>
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" name="password" 
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition" 
+                           placeholder="Enter your password" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500">Forgot password?</a>
+                </div>
+                <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                    Sign In
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">Don't have an account? <a href="#" class="text-blue-600 hover:text-blue-500 font-medium">Contact admin</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden Initially) -->
+    <div id="app" class="hidden">
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-button" class="md:hidden fixed top-4 left-4 z-50 bg-white p-2 rounded-lg shadow-lg">
+            <i class="fas fa-bars text-gray-700 text-xl"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar bg-white w-64 min-h-screen fixed shadow-lg md:relative">
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div id="user-avatar" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                        A
+                    </div>
+                    <div>
+                        <h3 id="username-display" class="font-semibold text-gray-800">Admin</h3>
+                        <p id="user-role" class="text-xs text-gray-500">Administrator</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" id="dashboard-link" class="flex items-center space-x-3 p-3 rounded-lg text-blue-600 bg-blue-50">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="profile-link" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-user"></i>
+                            <span>Profile</span>
+                        </a>
+                    </li>
+                    <li id="admin-menu-item" class="hidden">
+                        <a href="#" id="users-link" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-users"></i>
+                            <span>Manage Users</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="settings-link" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="logout-link" class="flex items-center space-x-3 p-3 rounded-lg text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="md:ml-64 min-h-screen">
+            <!-- Header -->
+            <header class="bg-white shadow-sm p-4">
+                <div class="flex justify-between items-center">
+                    <h1 id="page-title" class="text-xl font-semibold text-gray-800">Dashboard</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button id="notifications-btn" class="p-2 rounded-full hover:bg-gray-100">
+                                <i class="fas fa-bell text-gray-600"></i>
+                                <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-btn" class="flex items-center space-x-2">
+                                <div id="header-avatar" class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">
+                                    A
+                                </div>
+                                <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                            </button>
+                            <div id="user-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="p-4">
+                <!-- Dashboard Content -->
+                <div id="dashboard-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-sm p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Users</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">9</h3>
+                                </div>
+                                <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
+                                    <i class="fas fa-users text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Admin Users</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">1</h3>
+                                </div>
+                                <div class="p-3 rounded-lg bg-green-100 text-green-600">
+                                    <i class="fas fa-user-shield text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Regular Users</p>
+                                    <h3 class="text-2xl font-bold text-gray-800">8</h3>
+                                </div>
+                                <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
+                                    <i class="fas fa-user text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800">Recent Activity</h2>
+                            <a href="#" class="text-sm text-blue-600 hover:text-blue-500">View All</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-4">
+                                <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">New user registered</p>
+                                    <p class="text-xs text-gray-500">2 minutes ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <div class="p-2 bg-green-100 rounded-lg text-green-600">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">User logged in</p>
+                                    <p class="text-xs text-gray-500">10 minutes ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <div class="p-2 bg-purple-100 rounded-lg text-purple-600">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">System updated</p>
+                                    <p class="text-xs text-gray-500">1 hour ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Content -->
+                <div id="profile-content" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-6">Profile Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <input type="text" id="profile-username" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" value="admin" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                <input type="text" id="profile-role" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" value="Administrator" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" value="admin@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input type="tel" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" value="+1234567890">
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Update Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-6">Change Password</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                <input type="password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Management Content (Admin Only) -->
+                <div id="users-content" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-semibold text-gray-800">User Management</h2>
+                            <button id="add-user-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center space-x-2">
+                                <i class="fas fa-plus"></i>
+                                <span>Add User</span>
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Users will be populated here by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Content -->
+                <div id="settings-content" class="hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-6">System Settings</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
+                                <input type="text" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" value="User Management System">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Site Logo</label>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-image text-gray-400"></i>
+                                    </div>
+                                    <div>
+                                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition">
+                                            Upload New
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Maintenance Mode</label>
+                                <div class="flex items-center space-x-4">
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="maintenance" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" checked>
+                                        <span class="ml-2 text-sm text-gray-700">Active</span>
+                                    </label>
+                                    <label class="inline-flex items-center">
+                                        <input type="radio" name="maintenance" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                        <span class="ml-2 text-sm text-gray-700">Maintenance</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Add User Modal -->
+        <div id="add-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Add New User</h3>
+                        <button id="close-add-user-modal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="add-user-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="new-username" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="new-email" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="new-password" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <select id="new-role" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="user">Regular User</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                Create User
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample user data با تغییرات امنیتی
+        const users = [
+            { id: 1, username: 'admin', password: 'poyaadmin', role: 'admin', status: 'active' },
+            { id: 2, username: 'user1', password: 'user123', role: 'user', status: 'active' },
+            { id: 3, username: 'user2', password: 'user123', role: 'user', status: 'active' },
+            { id: 4, username: 'user3', password: 'user123', role: 'user', status: 'active' },
+            { id: 5, username: 'user4', password: 'user123', role: 'user', status: 'inactive' },
+            { id: 6, username: 'user5', password: 'user123', role: 'user', status: 'active' },
+            { id: 7, username: 'user6', password: 'user123', role: 'user', status: 'active' },
+            { id: 8, username: 'user7', password: 'user123', role: 'user', status: 'inactive' },
+            { id: 9, username: 'user8', password: 'user123', role: 'user', status: 'active' }
+        ];
+
+        // Current user (will be set after login)
+        let currentUser = null;
+
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const app = document.getElementById('app');
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        
+        // Sidebar elements
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const sidebar = document.getElementById('sidebar');
+        const dashboardLink = document.getElementById('dashboard-link');
+        const profileLink = document.getElementById('profile-link');
+        const usersLink = document.getElementById('users-link');
+        const settingsLink = document.getElementById('settings-link');
+        const logoutLink = document.getElementById('logout-link');
+        const adminMenuItem = document.getElementById('admin-menu-item');
+        
+        // Content areas
+        const dashboardContent = document.getElementById('dashboard-content');
+        const profileContent = document.getElementById('profile-content');
+        const usersContent = document.getElementById('users-content');
+        const settingsContent = document.getElementById('settings-content');
+        
+        // User management elements
+        const usersTableBody = document.getElementById('users-table-body');
+        const addUserBtn = document.getElementById('add-user-btn');
+        const addUserModal = document.getElementById('add-user-modal');
+        const closeAddUserModal = document.getElementById('close-add-user-modal');
+        const addUserForm = document.getElementById('add-user-form');
+        
+        // User profile elements
+        const userAvatar = document.getElementById('user-avatar');
+        const usernameDisplay = document.getElementById('username-display');
+        const userRole = document.getElementById('user-role');
+        const headerAvatar = document.getElementById('header-avatar');
+        
+        // Page title
+        const pageTitle = document.getElementById('page-title');
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in (from localStorage)
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showApp();
+            }
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Login form submission با تغییرات امنیتی
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                
+                // احراز هویت ادمین با پسورد ویژه
+                const user = users.find(u => {
+                    if (username === 'admin') {
+                        return u.username === username && password === 'poyaadmin';
+                    }
+                    return u.username === username && u.password === password;
+                });
+                
+                if (user) {
+                    currentUser = user;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showApp();
+                } else {
+                    alert('Invalid username or password');
+                }
+            });
+            
+            // بقیه event listeners بدون تغییر...
+            // Mobile menu toggle
+            mobileMenuButton.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+            
+            // Navigation links
+            dashboardLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('dashboard');
+            });
+            
+            profileLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('profile');
+            });
+            
+            usersLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('users');
+            });
+            
+            settingsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('settings');
+            });
+            
+            logoutLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+            
+            // User management
+            addUserBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                addUserModal.classList.remove('hidden');
+            });
+            
+            closeAddUserModal.addEventListener('click', function(e) {
+                e.preventDefault();
+                addUserModal.classList.add('hidden');
+            });
+            
+            addUserForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('new-username').value.trim();
+                const role = document.getElementById('new-role').value;
+                
+                // In a real app, this would be sent to the server
+                const newUser = {
+                    id: users.length + 1,
+                    username: username,
+                    password: 'defaultPassword', // در محیط واقعی باید پسورد ایمن ایجاد شود
+                    role: role,
+                    status: 'active'
+                };
+                
+                users.push(newUser);
+                populateUsersTable();
+                addUserModal.classList.add('hidden');
+                addUserForm.reset();
+                
+                // Show success message
+                alert('User created successfully!');
+            });
+        }
+
+        // بقیه توابع بدون تغییر...
+        function showApp() {
+            loginPage.classList.add('hidden');
+            app.classList.remove('hidden');
+            
+            // Update UI based on current user
+            updateUserInfo();
+            
+            // Show appropriate content based on user role
+            if (currentUser.role === 'admin') {
+                adminMenuItem.classList.remove('hidden');
+                showContent('dashboard');
+            } else {
+                adminMenuItem.classList.add('hidden');
+                showContent('profile');
+            }
+        }
+
+        function updateUserInfo() {
+            // Update sidebar and header with user info
+            const firstLetter = currentUser.username.charAt(0).toUpperCase();
+            userAvatar.textContent = firstLetter;
+            headerAvatar.textContent = firstLetter;
+            usernameDisplay.textContent = currentUser.username;
+            
+            if (currentUser.role === 'admin') {
+                userRole.textContent = 'Administrator';
+                userAvatar.classList.add('bg-blue-500');
+                headerAvatar.classList.add('bg-blue-500');
+            } else {
+                userRole.textContent = 'Regular User';
+                userAvatar.classList.add('bg-green-500');
+                headerAvatar.classList.add('bg-green-500');
+            }
+        }
+
+        function showContent(content) {
+            // Hide all content
+            dashboardContent.classList.add('hidden');
+            profileContent.classList.add('hidden');
+            usersContent.classList.add('hidden');
+            settingsContent.classList.add('hidden');
+            
+            // Reset active nav items
+            dashboardLink.classList.remove('text-blue-600', 'bg-blue-50');
+            profileLink.classList.remove('text-blue-600', 'bg-blue-50');
+            usersLink.classList.remove('text-blue-600', 'bg-blue-50');
+            settingsLink.classList.remove('text-blue-600', 'bg-blue-50');
+            
+            // Show selected content and update active nav item
+            switch(content) {
+                case 'dashboard':
+                    dashboardContent.classList.remove('hidden');
+                    dashboardLink.classList.add('text-blue-600', 'bg-blue-50');
+                    pageTitle.textContent = 'Dashboard';
+                    break;
+                case 'profile':
+                    profileContent.classList.remove('hidden');
+                    profileLink.classList.add('text-blue-600', 'bg-blue-50');
+                    pageTitle.textContent = 'Profile';
+                    break;
+                case 'users':
+                    usersContent.classList.remove('hidden');
+                    usersLink.classList.add('text-blue-600', 'bg-blue-50');
+                    pageTitle.textContent = 'User Management';
+                    populateUsersTable();
+                    break;
+                case 'settings':
+                    settingsContent.classList.remove('hidden');
+                    settingsLink.classList.add('text-blue-600', 'bg-blue-50');
+                    pageTitle.textContent = 'Settings';
+                    break;
+            }
+            
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+        }
+
+        function populateUsersTable() {
+            usersTableBody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                            ${user.role === 'admin' ? 'Administrator' : 'Regular User'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${user.status === 'active' ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3 edit-user" data-id="${user.id}">Edit</button>
+                        ${user.id !== currentUser.id ? `<button class="text-red-600 hover:text-red-900 delete-user" data-id="${user.id}">Delete</button>` : ''}
+                    </td>
+                `;
+                
+                usersTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.getAttribute('data-id'));
+                    editUser(userId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.getAttribute('data-id'));
+                    if (confirm('Are you sure you want to delete this user?')) {
+                        deleteUser(userId);
+                    }
+                });
+            });
+        }
+
+        function editUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                alert(`Editing user: ${user.username}\nThis would open an edit modal in a real application.`);
+            }
+        }
+
+        function deleteUser(userId) {
+            const index = users.findIndex(u => u.id === userId);
+            if (index !== -1) {
+                users.splice(index, 1);
+                populateUsersTable();
+                alert('User deleted successfully!');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            app.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            loginForm.reset();
+        }
+    </script>
+</body>
+</html>
